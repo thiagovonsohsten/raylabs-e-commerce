@@ -27,7 +27,7 @@ Sistema de e-commerce com fluxo síncrono (REST API) e fluxo assíncrono (event-
 Pré-requisito: **Docker Desktop** com Compose v2.
 
 ```bash
-git clone <repo>
+git clone https://github.com/thiagovonsohsten/raylabs-e-commerce.git
 cd RayLabs
 cp .env.example .env
 docker compose up --build
