@@ -2,7 +2,7 @@
 
 Sistema de e-commerce com fluxo síncrono (REST API) e fluxo assíncrono (event-driven) usando **Node.js + TypeScript**, **PostgreSQL**, **RabbitMQ** e **React**.
 
-> Implementa o desafio completo com **todos os bônus** (DLQ, retry exponencial, outbox pattern, lock pessimista, JWT com roles, Docker Compose, frontend React com polling).
+> Desafio completo com **os bônus** (DLQ, retry exponencial, outbox pattern, lock pessimista, JWT com roles, Docker Compose, frontend React com polling).
 
 ---
 
