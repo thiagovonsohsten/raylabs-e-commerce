@@ -1,0 +1,57 @@
+{
+  "name": "@raylabs/backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "E-commerce event-driven backend",
+  "main": "dist/main/bootstrap-api.js",
+  "scripts": {
+    "dev:api": "tsx watch src/main/bootstrap-api.ts",
+    "dev:payment": "tsx watch src/main/bootstrap-payment-consumer.ts",
+    "dev:inventory": "tsx watch src/main/bootstrap-inventory-consumer.ts",
+    "dev:outbox": "tsx watch src/main/bootstrap-outbox-relay.ts",
+    "build": "tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
+    "start:api": "node dist/main/bootstrap-api.js",
+    "start:payment": "node dist/main/bootstrap-payment-consumer.js",
+    "start:inventory": "node dist/main/bootstrap-inventory-consumer.js",
+    "start:outbox": "node dist/main/bootstrap-outbox-relay.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate deploy",
+    "prisma:migrate:dev": "prisma migrate dev",
+    "prisma:seed": "tsx prisma/seed.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@fastify/cors": "^9.0.1",
+    "@fastify/jwt": "^8.0.1",
+    "@fastify/swagger": "^8.14.0",
+    "@fastify/swagger-ui": "^4.0.0",
+    "@prisma/client": "^5.22.0",
+    "amqplib": "^0.10.4",
+    "bcryptjs": "^2.4.3",
+    "fastify": "^4.28.1",
+    "pino": "^9.5.0",
+    "pino-pretty": "^11.2.2",
+    "uuid": "^10.0.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/amqplib": "^0.10.5",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20.14.10",
+    "@types/supertest": "^6.0.2",
+    "@types/uuid": "^10.0.0",
+    "prisma": "^5.22.0",
+    "supertest": "^7.0.0",
+    "tsc-alias": "^1.8.16",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.5"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  }
+}
