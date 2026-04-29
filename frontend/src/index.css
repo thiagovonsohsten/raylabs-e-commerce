@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8,6 +10,40 @@ body,
   height: 100%;
 }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+@layer base {
+  body {
+    @apply bg-black text-zinc-100 antialiased;
+    font-family: 'Lexend', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  /* Botão primário com gradiente da marca */
+  .btn-gradient {
+    @apply inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-lg transition-all duration-200;
+    background: linear-gradient(to right, #c77dff, #9d4edd);
+    box-shadow: 0 4px 24px -4px rgba(157, 78, 221, 0.45);
+  }
+  .btn-gradient:hover:not(:disabled) {
+    filter: brightness(1.08);
+    box-shadow: 0 6px 28px -4px rgba(199, 125, 255, 0.5);
+  }
+  .btn-gradient:disabled {
+    @apply cursor-not-allowed opacity-45 shadow-none;
+  }
+
+  /* Botão secundário (outline no tema escuro) */
+  .btn-outline {
+    @apply inline-flex items-center justify-center rounded-lg border border-zinc-600 bg-zinc-900/80 px-4 py-2.5 text-sm font-medium text-zinc-200 transition-colors hover:border-zinc-500 hover:bg-zinc-800;
+  }
+
+  /* Card padrão */
+  .card-dark {
+    @apply rounded-2xl border border-ray-border bg-ray-card/90 p-6 shadow-xl backdrop-blur-sm;
+  }
+
+  /* Input no tema escuro */
+  .input-dark {
+    @apply w-full rounded-lg border border-zinc-700 bg-zinc-900/80 px-3 py-2.5 text-zinc-100 placeholder-zinc-500 outline-none ring-0 transition-colors focus:border-[#9d4edd] focus:ring-2 focus:ring-[#9d4edd]/25;
+  }
 }

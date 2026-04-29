@@ -14,9 +14,9 @@ export default function ProductsPage() {
   if (isLoading) return <Skeleton />;
   if (isError) {
     return (
-      <div className="rounded bg-red-50 p-4 text-red-700">
+      <div className="rounded-xl border border-red-900/60 bg-red-950/40 p-4 text-red-200">
         Erro ao carregar produtos.{' '}
-        <button onClick={() => refetch()} className="underline">
+        <button type="button" onClick={() => refetch()} className="font-medium text-[#c77dff] hover:underline">
           Tentar novamente
         </button>
       </div>
@@ -25,27 +25,28 @@ export default function ProductsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-1">Produtos</h1>
-      <p className="text-sm text-slate-600 mb-6">
-        Adicione itens ao carrinho e finalize a compra.
+      <h1 className="mb-1 text-2xl font-semibold tracking-tight text-white sm:text-3xl">Produtos</h1>
+      <p className="mb-8 max-w-xl text-sm text-zinc-400">
+        Adicione itens ao carrinho e finalize a compra. Preços e estoque vêm da API.
       </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {data?.map((p) => (
           <article
             key={p.id}
-            className="rounded-lg border bg-white shadow-sm p-5 flex flex-col"
+            className="group flex flex-col rounded-2xl border border-zinc-800/90 bg-ray-card/80 p-5 shadow-lg transition-colors hover:border-zinc-700 hover:shadow-glow"
           >
-            <h3 className="font-semibold text-lg">{p.name}</h3>
-            <p className="text-emerald-600 font-bold text-2xl mt-2">
+            <h3 className="text-lg font-semibold text-white">{p.name}</h3>
+            <p className="mt-3 bg-gradient-to-r from-[#c77dff] to-[#9d4edd] bg-clip-text text-2xl font-bold text-transparent">
               {p.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
             </p>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="mt-1 text-xs text-zinc-500">
               {p.stock > 0 ? `${p.stock} em estoque` : 'Sem estoque'}
             </p>
             <button
+              type="button"
               onClick={() => addItem({ productId: p.id, productName: p.name, unitPrice: p.price })}
               disabled={p.stock === 0}
-              className="mt-4 w-full rounded bg-slate-900 text-white py-2 font-medium hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-gradient mt-4 w-full"
             >
               {p.stock === 0 ? 'Indisponível' : 'Adicionar ao carrinho'}
             </button>
@@ -58,9 +59,9 @@ export default function ProductsPage() {
 
 function Skeleton() {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="h-44 animate-pulse rounded-lg bg-slate-200" />
+        <div key={i} className="h-48 animate-pulse rounded-2xl bg-zinc-900/80 ring-1 ring-zinc-800" />
       ))}
     </div>
   );

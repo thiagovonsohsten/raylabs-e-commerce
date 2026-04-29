@@ -3,19 +3,20 @@ import type { OrderStatus } from '@/types';
 const STYLES: Record<OrderStatus, { label: string; classes: string }> = {
   PENDING_PAYMENT: {
     label: 'Aguardando pagamento',
-    classes: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+    classes:
+      'border-amber-500/40 bg-amber-500/15 text-amber-200 ring-1 ring-amber-500/20',
   },
   CONFIRMED: {
     label: 'Confirmado',
-    classes: 'bg-green-100 text-green-800 border-green-300',
+    classes: 'border-emerald-500/40 bg-emerald-500/15 text-emerald-200 ring-1 ring-emerald-500/20',
   },
   CANCELLED: {
     label: 'Cancelado (sem estoque)',
-    classes: 'bg-orange-100 text-orange-800 border-orange-300',
+    classes: 'border-orange-500/40 bg-orange-500/15 text-orange-200 ring-1 ring-orange-500/20',
   },
   PAYMENT_FAILED: {
     label: 'Pagamento recusado',
-    classes: 'bg-red-100 text-red-800 border-red-300',
+    classes: 'border-red-500/40 bg-red-500/15 text-red-200 ring-1 ring-red-500/20',
   },
 };
 
@@ -25,7 +26,7 @@ export function StatusBadge({ status }: { status: OrderStatus }) {
     <span
       className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${cfg.classes}`}
     >
-      <span className="h-2 w-2 rounded-full bg-current" />
+      <span className="h-2 w-2 shrink-0 rounded-full bg-current opacity-90" />
       {cfg.label}
     </span>
   );

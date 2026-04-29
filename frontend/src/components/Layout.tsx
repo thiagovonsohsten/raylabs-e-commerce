@@ -1,70 +1,84 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { useAuthStore } from '@/store/auth';
 import { useCartStore } from '@/store/cart';
+import { BrandLogo } from '@/components/BrandLogo';
+
+const navLinkClass = ({ isActive }: { isActive: boolean }) =>
+  [
+    'rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+    isActive
+      ? 'bg-white/10 text-white shadow-inner ring-1 ring-[#9d4edd]/40'
+      : 'text-zinc-400 hover:bg-zinc-800/80 hover:text-zinc-100',
+  ].join(' ');
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const auth = useAuthStore();
-  const cartCount = useCartStore((s) => s.itemCount());
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    auth.logout();
-    navigate('/login');
-  };
+  const token = useAuthStore((s) => s.token);
+  const customer = useAuthStore((s) => s.customer);
+  const logout = useAuthStore((s) => s.logout);
+  const count = useCartStore((s) => s.itemCount());
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="bg-slate-900 text-white shadow">
-        <div className="mx-auto max-w-6xl flex items-center justify-between px-6 py-4">
-          <Link to="/products" className="text-xl font-bold tracking-tight">
-            RayLabs <span className="text-emerald-400">e-commerce</span>
-          </Link>
-          <nav className="flex items-center gap-6 text-sm">
-            <Link to="/products" className="hover:text-emerald-400">
+    <div className="flex min-h-full flex-col bg-black">
+      <header className="sticky top-0 z-20 border-b border-zinc-800/90 bg-zinc-950/90 backdrop-blur-md">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+          <BrandLogo />
+          <nav className="flex flex-wrap items-center justify-end gap-1 sm:gap-2">
+            <NavLink to="/products" className={navLinkClass}>
               Produtos
-            </Link>
-            <Link to="/checkout" className="hover:text-emerald-400 relative">
+            </NavLink>
+            <NavLink to="/checkout" className={navLinkClass}>
               Carrinho
-              {cartCount > 0 && (
-                <span className="absolute -top-2 -right-4 rounded-full bg-emerald-500 px-2 text-xs font-bold">
-                  {cartCount}
+              {count > 0 && (
+                <span className="ml-1.5 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-gradient-to-r from-[#c77dff] to-[#9d4edd] px-1.5 text-[10px] font-bold text-white">
+                  {count}
                 </span>
               )}
-            </Link>
-            {auth.token ? (
+            </NavLink>
+            {token ? (
               <>
-                <Link to="/orders" className="hover:text-emerald-400">
-                  Meus pedidos
-                </Link>
-                <span className="text-slate-300 hidden sm:inline">
-                  {auth.customer?.name} ({auth.customer?.role})
+                <NavLink to="/orders" className={navLinkClass}>
+                  Pedidos
+                </NavLink>
+                <span className="hidden text-xs text-zinc-500 sm:inline max-w-[140px] truncate">
+                  {customer?.name}
                 </span>
-                <button
-                  onClick={handleLogout}
-                  className="rounded bg-slate-700 px-3 py-1.5 hover:bg-slate-600"
-                >
+                <button type="button" onClick={logout} className="btn-outline !py-2 text-xs">
                   Sair
                 </button>
               </>
             ) : (
               <>
-                <Link to="/login" className="hover:text-emerald-400">
-                  Login
-                </Link>
-                <Link
+                <NavLink to="/login" className={navLinkClass}>
+                  Entrar
+                </NavLink>
+                <NavLink
                   to="/register"
-                  className="rounded bg-emerald-500 px-3 py-1.5 font-medium text-slate-900 hover:bg-emerald-400"
+                  className="rounded-lg bg-gradient-to-r from-[#c77dff] to-[#9d4edd] px-3 py-2 text-sm font-semibold text-white shadow-lg transition-opacity hover:opacity-90"
                 >
                   Cadastrar
-                </Link>
+                </NavLink>
               </>
             )}
           </nav>
         </div>
       </header>
-      <main className="flex-1 mx-auto w-full max-w-6xl px-6 py-8">{children}</main>
-      <footer className="border-t bg-white text-center text-xs text-slate-500 py-4">
-        RayLabs Desafio Técnico — fluxo síncrono e assíncrono com RabbitMQ.
+
+      <main className="relative flex-1">
+        {/* Luz ambiente sutil atrás do conteúdo */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.12]"
+          style={{
+            background:
+              'radial-gradient(ellipse 80% 50% at 50% -20%, #9d4edd, transparent), radial-gradient(ellipse 60% 40% at 100% 50%, #c77dff22, transparent)',
+          }}
+        />
+        <div className="relative mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
+          {children}
+        </div>
+      </main>
+
+      <footer className="border-t border-zinc-800/80 bg-zinc-950 py-6 text-center text-xs text-zinc-500">
+        Ray Labs · fluxo assíncrono com pagamento e estoque
       </footer>
     </div>
   );

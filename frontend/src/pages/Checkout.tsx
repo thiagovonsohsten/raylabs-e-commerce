@@ -13,13 +13,10 @@ export default function CheckoutPage() {
 
   if (cart.items.length === 0) {
     return (
-      <div className="rounded bg-white p-8 text-center shadow">
-        <h1 className="text-2xl font-bold mb-2">Carrinho vazio</h1>
-        <p className="text-slate-600 mb-4">Adicione produtos antes de finalizar.</p>
-        <button
-          onClick={() => navigate('/products')}
-          className="rounded bg-emerald-500 px-4 py-2 font-medium text-slate-900 hover:bg-emerald-400"
-        >
+      <div className="card-dark mx-auto max-w-lg text-center">
+        <h1 className="mb-2 text-2xl font-semibold text-white">Carrinho vazio</h1>
+        <p className="mb-6 text-zinc-400">Adicione produtos antes de finalizar.</p>
+        <button type="button" onClick={() => navigate('/products')} className="btn-gradient px-8">
           Ver produtos
         </button>
       </div>
@@ -28,12 +25,10 @@ export default function CheckoutPage() {
 
   if (!auth.token) {
     return (
-      <div className="rounded bg-white p-8 text-center shadow">
-        <h1 className="text-2xl font-bold mb-2">Faça login para continuar</h1>
-        <button
-          onClick={() => navigate('/login')}
-          className="rounded bg-emerald-500 px-4 py-2 font-medium text-slate-900 hover:bg-emerald-400"
-        >
+      <div className="card-dark mx-auto max-w-lg text-center">
+        <h1 className="mb-2 text-2xl font-semibold text-white">Faça login para continuar</h1>
+        <p className="mb-6 text-sm text-zinc-400">Você precisa estar autenticado para criar um pedido.</p>
+        <button type="button" onClick={() => navigate('/login')} className="btn-gradient px-8">
           Entrar
         </button>
       </div>
@@ -48,8 +43,12 @@ export default function CheckoutPage() {
       await api.post('/orders', { items });
       cart.clear();
       navigate('/orders');
-    } catch (err: any) {
-      setError(err.response?.data?.message ?? 'Erro ao criar pedido.');
+    } catch (err: unknown) {
+      const msg =
+        err && typeof err === 'object' && 'response' in err
+          ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+          : null;
+      setError(msg ?? 'Erro ao criar pedido.');
     } finally {
       setSubmitting(false);
     }
@@ -57,81 +56,78 @@ export default function CheckoutPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">Checkout</h1>
-      <div className="rounded-lg bg-white shadow overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-100 text-left">
-            <tr>
-              <th className="p-3">Produto</th>
-              <th className="p-3">Preço</th>
-              <th className="p-3">Qtd</th>
-              <th className="p-3">Subtotal</th>
-              <th className="p-3"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {cart.items.map((item) => (
-              <tr key={item.productId} className="border-t">
-                <td className="p-3 font-medium">{item.productName}</td>
-                <td className="p-3">
-                  {item.unitPrice.toLocaleString('pt-BR', {
-                    style: 'currency',
-                    currency: 'BRL',
-                  })}
+      <h1 className="mb-2 text-2xl font-semibold tracking-tight text-white">Checkout</h1>
+      <p className="mb-6 text-sm text-zinc-400">Revise os itens e finalize o pedido.</p>
+      <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-ray-card/90 shadow-xl">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[520px] text-sm">
+            <thead className="border-b border-zinc-800 bg-zinc-900/80 text-left text-zinc-400">
+              <tr>
+                <th className="p-3 font-medium">Produto</th>
+                <th className="p-3 font-medium">Preço</th>
+                <th className="p-3 font-medium">Qtd</th>
+                <th className="p-3 font-medium">Subtotal</th>
+                <th className="p-3" />
+              </tr>
+            </thead>
+            <tbody>
+              {cart.items.map((item) => (
+                <tr key={item.productId} className="border-t border-zinc-800/80">
+                  <td className="p-3 font-medium text-zinc-100">{item.productName}</td>
+                  <td className="p-3 text-zinc-300">
+                    {item.unitPrice.toLocaleString('pt-BR', {
+                      style: 'currency',
+                      currency: 'BRL',
+                    })}
+                  </td>
+                  <td className="p-3">
+                    <input
+                      type="number"
+                      min={0}
+                      value={item.quantity}
+                      onChange={(e) =>
+                        cart.updateQty(item.productId, Math.max(0, Number(e.target.value)))
+                      }
+                      className="input-dark w-20 py-1.5 text-center"
+                    />
+                  </td>
+                  <td className="p-3 text-zinc-200">
+                    {(item.unitPrice * item.quantity).toLocaleString('pt-BR', {
+                      style: 'currency',
+                      currency: 'BRL',
+                    })}
+                  </td>
+                  <td className="p-3">
+                    <button
+                      type="button"
+                      onClick={() => cart.removeItem(item.productId)}
+                      className="text-sm text-red-400 hover:text-red-300 hover:underline"
+                    >
+                      Remover
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr className="border-t border-zinc-800 bg-zinc-900/50">
+                <td className="p-3 font-semibold text-white" colSpan={3}>
+                  Total
                 </td>
-                <td className="p-3">
-                  <input
-                    type="number"
-                    min={0}
-                    value={item.quantity}
-                    onChange={(e) =>
-                      cart.updateQty(item.productId, Math.max(0, Number(e.target.value)))
-                    }
-                    className="w-16 rounded border px-2 py-1"
-                  />
-                </td>
-                <td className="p-3">
-                  {(item.unitPrice * item.quantity).toLocaleString('pt-BR', {
-                    style: 'currency',
-                    currency: 'BRL',
-                  })}
-                </td>
-                <td className="p-3">
-                  <button
-                    onClick={() => cart.removeItem(item.productId)}
-                    className="text-red-600 hover:underline"
-                  >
-                    Remover
-                  </button>
+                <td className="p-3 text-lg font-bold text-white" colSpan={2}>
+                  {cart.total().toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </td>
               </tr>
-            ))}
-          </tbody>
-          <tfoot>
-            <tr className="border-t bg-slate-50">
-              <td className="p-3 font-bold" colSpan={3}>
-                Total
-              </td>
-              <td className="p-3 font-bold text-lg" colSpan={2}>
-                {cart.total().toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-              </td>
-            </tr>
-          </tfoot>
-        </table>
+            </tfoot>
+          </table>
+        </div>
       </div>
-      {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
-      <div className="mt-6 flex justify-end gap-3">
-        <button
-          onClick={() => navigate('/products')}
-          className="rounded border px-4 py-2 hover:bg-slate-50"
-        >
+      {error && <p className="mt-4 text-sm text-red-400">{error}</p>}
+      <div className="mt-6 flex flex-wrap justify-end gap-3">
+        <button type="button" onClick={() => navigate('/products')} className="btn-outline">
           Continuar comprando
         </button>
-        <button
-          onClick={handleSubmit}
-          disabled={submitting}
-          className="rounded bg-emerald-500 px-6 py-2 font-medium text-slate-900 hover:bg-emerald-400 disabled:opacity-50"
-        >
+        <button type="button" onClick={handleSubmit} disabled={submitting} className="btn-gradient px-8">
           {submitting ? 'Enviando...' : 'Finalizar pedido'}
         </button>
       </div>
