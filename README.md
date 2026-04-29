@@ -2,7 +2,7 @@
 
 Sistema de e-commerce com fluxo síncrono (REST API) e fluxo assíncrono (event-driven) usando **Node.js + TypeScript**, **PostgreSQL**, **RabbitMQ** e **React**.
 
-> Implementa o desafio completo com **todos os bônus** (DLQ, retry exponencial, outbox pattern, lock pessimista, JWT com roles, Docker Compose, frontend React com polling).
+> Desafio completo com **os bônus** (DLQ, retry exponencial, outbox pattern, lock pessimista, JWT com roles, Docker Compose, frontend React com polling).
 
 ---
 
@@ -27,7 +27,7 @@ Sistema de e-commerce com fluxo síncrono (REST API) e fluxo assíncrono (event-
 Pré-requisito: **Docker Desktop** com Compose v2.
 
 ```bash
-git clone <repo>
+git clone https://github.com/thiagovonsohsten/raylabs-e-commerce.git
 cd RayLabs
 cp .env.example .env
 docker compose up --build
