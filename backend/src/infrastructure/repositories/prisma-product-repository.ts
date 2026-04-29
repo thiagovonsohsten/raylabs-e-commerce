@@ -1,7 +1,7 @@
-import type { PrismaClient, Product as PrismaProduct } from '@prisma/client';
+import { Prisma, type PrismaClient, type Product as PrismaProduct } from '@prisma/client';
 import { Product } from '@domain/entities/product.js';
 import { Money } from '@domain/value-objects/money.js';
-import { NotFoundError } from '@shared/errors/domain-error.js';
+import { ConflictError, NotFoundError } from '@shared/errors/domain-error.js';
 import type {
   DebitStockResult,
   ProductRepository,
@@ -47,16 +47,16 @@ export class PrismaProductRepository implements ProductRepository {
         },
       });
       return this.toDomain(updated);
-    } catch {
-      throw new NotFoundError('Produto', id);
+    } catch (err) {
+      this.handlePersistenceError(err, id);
     }
   }
 
   async delete(id: string): Promise<void> {
     try {
       await this.prisma.product.delete({ where: { id } });
-    } catch {
-      throw new NotFoundError('Produto', id);
+    } catch (err) {
+      this.handlePersistenceError(err, id);
     }
   }
 
@@ -121,5 +121,24 @@ export class PrismaProductRepository implements ProductRepository {
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     });
+  }
+
+  /**
+   * Traduz erros de infraestrutura para erros de domínio/uso.
+   * - P2025: recurso não encontrado
+   * - P2003: violação de FK (produto usado em pedidos)
+   */
+  private handlePersistenceError(err: unknown, productId: string): never {
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      if (err.code === 'P2025') {
+        throw new NotFoundError('Produto', productId);
+      }
+      if (err.code === 'P2003') {
+        throw new ConflictError(
+          'Produto não pode ser removido/alterado porque já está vinculado a pedidos.',
+        );
+      }
+    }
+    throw err;
   }
 }
