@@ -99,6 +99,7 @@ flowchart LR
 ### Princípios
 
 - **Clean Architecture**: `domain → application → infrastructure → interfaces`. Use-cases não conhecem Prisma nem Fastify, recebem **portas** (interfaces).
+- **Use-cases padronizados**: 1 operação por arquivo (`execute()`), com `index.ts` (barrel export) por módulo (`auth`, `order`, `product`).
 - **DDD light**: entidades com invariantes, value objects (`Email`, `Document`, `Money`), state machine no agregado `Order`.
 - **Event-driven**: estado dos pedidos evolui exclusivamente por eventos, não por chamadas síncronas entre módulos.
 - **Processos separados**: API (HTTP), `payment-consumer`, `inventory-consumer`, `outbox-relay`. Cada um pode escalar independentemente.
@@ -159,7 +160,8 @@ Detalhes:
 - **`priceCents` / `totalCents`** são `BigInt` (centavos). Evita erros de ponto flutuante.
 - **`Product.version`** habilita optimistic lock se necessário no futuro; o débito de estoque atual usa `SELECT ... FOR UPDATE` (pessimista).
 - **`OutboxEvent`** garante atomicidade pedido↔evento.
-- **`ProcessedEvent`** (PK = `messageId`) garante idempotência por consumer.
+- **Soft Delete** em `customers`, `products` e `orders` via `deletedAt` (deleção lógica).
+- **`ProcessedEvent`** usa `messageId` como chave primária para deduplicação de mensagens.
 
 ---
 
@@ -200,7 +202,7 @@ Implementada em [`backend/src/infrastructure/messaging/rabbitmq-consumer.ts`](ba
 
 ### Idempotência
 
-`PrismaIdempotencyStore` consulta/grava em `processed_events` por `(messageId, consumer)`. Se o mesmo evento for entregue 2x (at-least-once), o handler abandona silenciosamente.
+`PrismaIdempotencyStore` consulta/grava em `processed_events` por `messageId` (com coluna `consumer` para rastreabilidade). Se o mesmo evento for entregue 2x (at-least-once), o handler abandona silenciosamente.
 
 ---
 
@@ -262,7 +264,7 @@ Estados terminais: `CONFIRMED`, `CANCELLED`, `PAYMENT_FAILED`. A entidade `Order
 | GET    | `/products/:id`           | público      | Detalhe                                |
 | POST   | `/products`               | ADMIN        | Criar produto                          |
 | PUT    | `/products/:id`           | ADMIN        | Atualizar                              |
-| DELETE | `/products/:id`           | ADMIN        | Remover                                |
+| DELETE | `/products/:id`           | ADMIN        | Remover (soft delete)                  |
 | POST   | `/orders`                 | autenticado  | Criar pedido (publica `order.created`) |
 | GET    | `/orders`                 | autenticado  | CUSTOMER: próprios; ADMIN: todos       |
 | GET    | `/orders/:id`             | dono ou ADMIN| Detalhe                                |
@@ -285,6 +287,7 @@ Todos os bônus do enunciado foram entregues:
 | **JWT + roles ADMIN/CUSTOMER**            | [`auth-plugin.ts`](backend/src/interfaces/http/auth-plugin.ts) — middleware `app.authorize(roles)` |
 | **Docker Compose com tudo**               | [`docker-compose.yml`](docker-compose.yml) — 7 serviços com healthchecks |
 | **Idempotência at-least-once**            | [`prisma-idempotency-store.ts`](backend/src/infrastructure/repositories/prisma-idempotency-store.ts) |
+| **Soft Delete (Customer/Product/Order)**  | [`schema.prisma`](backend/prisma/schema.prisma) + repositórios Prisma com filtro `deletedAt: null` |
 | **Frontend React (Products, Checkout, MyOrders)** | [`frontend/`](frontend) — polling de 3s em `MyOrders` via TanStack Query |
 
 ---
@@ -320,6 +323,14 @@ Publicar diretamente do controller para o RabbitMQ tem 2 modos de falha:
 Outbox elimina ambos: pedido + evento são gravados na **mesma transação**. O relay é at-least-once (o publisher idempotente do RabbitMQ + idempotência do consumer cobrem duplicatas).
 
 Trade-off: ~1s de latência (intervalo do poll). Aceitável para pedidos.
+
+### Soft Delete vs. delete físico
+
+`Customer`, `Product` e `Order` usam deleção lógica (`deletedAt`) para preservar histórico e evitar inconsistências de referência.
+
+- Em `Product`, o `DELETE /products/:id` agora inativa o registro sem remover fisicamente.
+- Isso elimina o problema de FK com `order_items` e mantém rastreabilidade histórica.
+- Consultas de negócio filtram apenas ativos (`deletedAt IS NULL`) por padrão.
 
 ### Por que não SAGAs / Choreography mais sofisticada?
 
@@ -382,7 +393,7 @@ RayLabs/
 │   │   ├── application/        # Use-cases + ports (interfaces)
 │   │   ├── infrastructure/     # Prisma, RabbitMQ, JWT, bcrypt
 │   │   ├── interfaces/
-│   │   │   ├── http/           # Fastify routes, error handler, auth plugin
+│   │   │   ├── http/           # Fastify routes, schemas, error handler, auth plugin
 │   │   │   └── consumers/      # outbox-relay, payment, inventory
 │   │   ├── shared/             # logger, config, errors
 │   │   └── main/               # 4 bootstraps (api, payment, inventory, outbox)
@@ -447,6 +458,13 @@ Variáveis principais (em `backend/.env`):
 5. `GET /orders/:id` → status agora é `CONFIRMED` (ou `CANCELLED` se você usou um produto sem estoque, ou `PAYMENT_FAILED` em ~10% dos casos).
 
 No frontend (`http://localhost:5173/orders`) o status muda automaticamente via polling.
+
+### Validação de Soft Delete (produto)
+
+1. Crie um produto como admin.
+2. Faça `DELETE /products/:id`.
+3. Confirme que ele não aparece mais em `GET /products`.
+4. Verifique no banco que a linha ainda existe com `deletedAt` preenchido.
 
 ---
 
