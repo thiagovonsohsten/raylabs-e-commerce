@@ -54,7 +54,7 @@ export function makeInventoryHandler(deps: {
     if (result.ok) {
       // Atualiza pedido para CONFIRMED. Só atualiza se estiver em PENDING_PAYMENT.
       const updated = await deps.prisma.order.updateMany({
-        where: { id: data.orderId, status: OrderStatus.PENDING_PAYMENT },
+        where: { id: data.orderId, status: OrderStatus.PENDING_PAYMENT, deletedAt: null },
         data: { status: OrderStatus.CONFIRMED },
       });
 
@@ -68,7 +68,7 @@ export function makeInventoryHandler(deps: {
       log.info({ rowsAffected: updated.count }, 'Estoque debitado e pedido CONFIRMED.');
     } else {
       const updated = await deps.prisma.order.updateMany({
-        where: { id: data.orderId, status: OrderStatus.PENDING_PAYMENT },
+        where: { id: data.orderId, status: OrderStatus.PENDING_PAYMENT, deletedAt: null },
         data: { status: OrderStatus.CANCELLED },
       });
 

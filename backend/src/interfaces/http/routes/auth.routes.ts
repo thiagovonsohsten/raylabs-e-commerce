@@ -1,23 +1,16 @@
 import type { FastifyInstance } from 'fastify';
-import { z } from 'zod';
 import { LoginUseCase } from '@application/use-cases/auth/login.js';
 import { RegisterCustomerUseCase } from '@application/use-cases/auth/register-customer.js';
 import { BcryptHashService } from '@infrastructure/auth/bcrypt-hash-service.js';
 import { FastifyJwtTokenService } from '@infrastructure/auth/jwt-token-service.js';
 import { getPrismaClient } from '@infrastructure/database/prisma-client.js';
 import { PrismaCustomerRepository } from '@infrastructure/repositories/prisma-customer-repository.js';
-
-const registerSchema = z.object({
-  name: z.string().min(1).max(120),
-  email: z.string().email(),
-  document: z.string().min(11).max(20),
-  password: z.string().min(6).max(72),
-});
-
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1),
-});
+import {
+  loginBodySchema,
+  loginRouteSchema,
+  registerBodySchema,
+  registerRouteSchema,
+} from '@interfaces/http/schemas/auth.schemas.js';
 
 export async function authRoutes(app: FastifyInstance): Promise<void> {
   const prisma = getPrismaClient();
@@ -31,23 +24,10 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
   app.post(
     '/auth/register',
     {
-      schema: {
-        tags: ['auth'],
-        summary: 'Registrar novo cliente',
-        body: {
-          type: 'object',
-          required: ['name', 'email', 'document', 'password'],
-          properties: {
-            name: { type: 'string', minLength: 1, maxLength: 120 },
-            email: { type: 'string', format: 'email' },
-            document: { type: 'string', description: 'CPF ou CNPJ' },
-            password: { type: 'string', minLength: 6 },
-          },
-        },
-      },
+      schema: registerRouteSchema,
     },
     async (req, reply) => {
-      const data = registerSchema.parse(req.body);
+      const data = registerBodySchema.parse(req.body);
       const result = await registerUseCase.execute(data);
       return reply.status(201).send(result);
     },
@@ -56,21 +36,10 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
   app.post(
     '/auth/login',
     {
-      schema: {
-        tags: ['auth'],
-        summary: 'Login com e-mail e senha',
-        body: {
-          type: 'object',
-          required: ['email', 'password'],
-          properties: {
-            email: { type: 'string', format: 'email' },
-            password: { type: 'string' },
-          },
-        },
-      },
+      schema: loginRouteSchema,
     },
     async (req, reply) => {
-      const data = loginSchema.parse(req.body);
+      const data = loginBodySchema.parse(req.body);
       const result = await loginUseCase.execute(data);
       return reply.send(result);
     },

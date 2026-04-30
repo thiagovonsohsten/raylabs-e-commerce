@@ -36,8 +36,10 @@ model Customer {
   passwordHash String
   role         Role     @default(CUSTOMER)
   createdAt    DateTime @default(now())
+  deletedAt    DateTime?
   orders       Order[]
 
+  @@index([deletedAt])
   @@map("customers")
 }
 
@@ -51,8 +53,10 @@ model Product {
   version   Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  deletedAt DateTime?
   items     OrderItem[]
 
+  @@index([deletedAt])
   @@map("products")
 }
 
@@ -64,10 +68,12 @@ model Order {
   totalCents BigInt
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
+  deletedAt  DateTime?
   items      OrderItem[]
 
   @@index([customerId])
   @@index([status])
+  @@index([deletedAt])
   @@map("orders")
 }
 

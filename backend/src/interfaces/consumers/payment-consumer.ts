@@ -78,7 +78,7 @@ export function makePaymentHandler(deps: {
       };
       // Atualiza pedido para PAYMENT_FAILED. Só atualiza se ainda estiver em PENDING_PAYMENT.
       await deps.prisma.order.updateMany({
-        where: { id: data.orderId, status: OrderStatus.PENDING_PAYMENT },
+        where: { id: data.orderId, status: OrderStatus.PENDING_PAYMENT, deletedAt: null },
         data: { status: OrderStatus.PAYMENT_FAILED },
       });
       await deps.publisher.publish(EventTypes.PAYMENT_FAILED, event, uuid());

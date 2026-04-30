@@ -9,17 +9,17 @@ export class PrismaCustomerRepository implements CustomerRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
   async findById(id: string): Promise<Customer | null> {
-    const found = await this.prisma.customer.findUnique({ where: { id } });
+    const found = await this.prisma.customer.findFirst({ where: { id, deletedAt: null } });
     return found ? this.toDomain(found) : null;
   }
 
   async findByEmail(email: string): Promise<Customer | null> {
-    const found = await this.prisma.customer.findUnique({ where: { email } });
+    const found = await this.prisma.customer.findFirst({ where: { email, deletedAt: null } });
     return found ? this.toDomain(found) : null;
   }
 
   async findByDocument(document: string): Promise<Customer | null> {
-    const found = await this.prisma.customer.findUnique({ where: { document } });
+    const found = await this.prisma.customer.findFirst({ where: { document, deletedAt: null } });
     return found ? this.toDomain(found) : null;
   }
 

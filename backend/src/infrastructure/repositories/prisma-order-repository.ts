@@ -25,8 +25,8 @@ export class PrismaOrderRepository implements OrderRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
   async findById(id: string): Promise<Order | null> {
-    const found = await this.prisma.order.findUnique({
-      where: { id },
+    const found = await this.prisma.order.findFirst({
+      where: { id, deletedAt: null },
       include: { items: true },
     });
     return found ? this.toDomain(found) : null;
@@ -34,7 +34,7 @@ export class PrismaOrderRepository implements OrderRepository {
 
   async findManyByCustomer(customerId: string): Promise<Order[]> {
     const list = await this.prisma.order.findMany({
-      where: { customerId },
+      where: { customerId, deletedAt: null },
       include: { items: true },
       orderBy: { createdAt: 'desc' },
     });
@@ -43,6 +43,7 @@ export class PrismaOrderRepository implements OrderRepository {
 
   async findAll(): Promise<Order[]> {
     const list = await this.prisma.order.findMany({
+      where: { deletedAt: null },
       include: { items: true },
       orderBy: { createdAt: 'desc' },
     });
@@ -50,16 +51,17 @@ export class PrismaOrderRepository implements OrderRepository {
   }
 
   async updateStatus(id: string, status: OrderStatus): Promise<Order> {
-    try {
-      const updated = await this.prisma.order.update({
-        where: { id },
-        data: { status: status as PrismaOrderStatus },
-        include: { items: true },
-      });
-      return this.toDomain(updated);
-    } catch {
-      throw new NotFoundError('Pedido', id);
-    }
+    const result = await this.prisma.order.updateMany({
+      where: { id, deletedAt: null },
+      data: { status: status as PrismaOrderStatus },
+    });
+    if (result.count === 0) throw new NotFoundError('Pedido', id);
+    const updated = await this.prisma.order.findUnique({
+      where: { id },
+      include: { items: true },
+    });
+    if (!updated || updated.deletedAt) throw new NotFoundError('Pedido', id);
+    return this.toDomain(updated);
   }
 
   async createWithOutbox(input: {

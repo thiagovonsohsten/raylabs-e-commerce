@@ -1,25 +1,18 @@
 import type { FastifyInstance } from 'fastify';
-import { z } from 'zod';
 import { Role } from '@domain/enums.js';
 import { CreateOrderUseCase } from '@application/use-cases/order/create-order.js';
 import { QueryOrdersUseCase } from '@application/use-cases/order/query-orders.js';
 import { getPrismaClient } from '@infrastructure/database/prisma-client.js';
 import { PrismaOrderRepository } from '@infrastructure/repositories/prisma-order-repository.js';
 import { PrismaProductRepository } from '@infrastructure/repositories/prisma-product-repository.js';
-
-const createSchema = z.object({
-  items: z
-    .array(
-      z.object({
-        productId: z.string().uuid(),
-        quantity: z.number().int().positive(),
-      }),
-    )
-    .min(1),
-});
-
-const idParamSchema = z.object({ id: z.string().uuid() });
-const listQuerySchema = z.object({ customerId: z.string().uuid().optional() });
+import {
+  createOrderBodySchema,
+  createOrderRouteSchema,
+  getOrderByIdRouteSchema,
+  listOrdersRouteSchema,
+  orderIdParamSchema,
+  ordersListQuerySchema,
+} from '@interfaces/http/schemas/orders.schemas.js';
 
 export async function ordersRoutes(app: FastifyInstance): Promise<void> {
   const prisma = getPrismaClient();
@@ -32,32 +25,10 @@ export async function ordersRoutes(app: FastifyInstance): Promise<void> {
     '/orders',
     {
       preHandler: app.authorize([Role.CUSTOMER, Role.ADMIN]),
-      schema: {
-        tags: ['orders'],
-        summary: 'Criar pedido (cliente autenticado)',
-        security: [{ bearerAuth: [] }],
-        body: {
-          type: 'object',
-          required: ['items'],
-          properties: {
-            items: {
-              type: 'array',
-              minItems: 1,
-              items: {
-                type: 'object',
-                required: ['productId', 'quantity'],
-                properties: {
-                  productId: { type: 'string', format: 'uuid' },
-                  quantity: { type: 'integer', minimum: 1 },
-                },
-              },
-            },
-          },
-        },
-      },
+      schema: createOrderRouteSchema,
     },
     async (req, reply) => {
-      const data = createSchema.parse(req.body);
+      const data = createOrderBodySchema.parse(req.body);
       const result = await createUseCase.execute({
         customerId: req.user.sub,
         items: data.items,
@@ -70,18 +41,10 @@ export async function ordersRoutes(app: FastifyInstance): Promise<void> {
     '/orders',
     {
       preHandler: app.authorize(),
-      schema: {
-        tags: ['orders'],
-        summary: 'Listar pedidos (cliente: próprios; admin: todos)',
-        security: [{ bearerAuth: [] }],
-        querystring: {
-          type: 'object',
-          properties: { customerId: { type: 'string', format: 'uuid' } },
-        },
-      },
+      schema: listOrdersRouteSchema,
     },
     async (req) => {
-      const { customerId } = listQuerySchema.parse(req.query);
+      const { customerId } = ordersListQuerySchema.parse(req.query);
       return queryUseCase.listForRequester(
         { sub: req.user.sub, role: req.user.role },
         customerId,
@@ -93,14 +56,10 @@ export async function ordersRoutes(app: FastifyInstance): Promise<void> {
     '/orders/:id',
     {
       preHandler: app.authorize(),
-      schema: {
-        tags: ['orders'],
-        summary: 'Detalhe de pedido',
-        security: [{ bearerAuth: [] }],
-      },
+      schema: getOrderByIdRouteSchema,
     },
     async (req) => {
-      const { id } = idParamSchema.parse(req.params);
+      const { id } = orderIdParamSchema.parse(req.params);
       return queryUseCase.getById(id, { sub: req.user.sub, role: req.user.role });
     },
   );
