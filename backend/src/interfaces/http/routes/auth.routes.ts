@@ -1,6 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { LoginUseCase } from '@application/use-cases/auth/login.js';
-import { RegisterCustomerUseCase } from '@application/use-cases/auth/register-customer.js';
+import { LoginUseCase, RegisterCustomerUseCase } from '@application/use-cases/auth/index.js';
 import { BcryptHashService } from '@infrastructure/auth/bcrypt-hash-service.js';
 import { FastifyJwtTokenService } from '@infrastructure/auth/jwt-token-service.js';
 import { getPrismaClient } from '@infrastructure/database/prisma-client.js';

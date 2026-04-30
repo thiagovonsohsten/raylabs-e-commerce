@@ -1,6 +1,12 @@
 import type { FastifyInstance } from 'fastify';
 import { Role } from '@domain/enums.js';
-import { ProductUseCases } from '@application/use-cases/product/index.js';
+import {
+  CreateProductUseCase,
+  DeleteProductUseCase,
+  GetProductByIdUseCase,
+  ListProductsUseCase,
+  UpdateProductUseCase,
+} from '@application/use-cases/product/index.js';
 import { getPrismaClient } from '@infrastructure/database/prisma-client.js';
 import { PrismaProductRepository } from '@infrastructure/repositories/prisma-product-repository.js';
 import {
@@ -16,14 +22,19 @@ import {
 
 export async function productsRoutes(app: FastifyInstance): Promise<void> {
   const prisma = getPrismaClient();
-  const useCases = new ProductUseCases(new PrismaProductRepository(prisma));
+  const products = new PrismaProductRepository(prisma);
+  const listProductsUseCase = new ListProductsUseCase(products);
+  const getProductByIdUseCase = new GetProductByIdUseCase(products);
+  const createProductUseCase = new CreateProductUseCase(products);
+  const updateProductUseCase = new UpdateProductUseCase(products);
+  const deleteProductUseCase = new DeleteProductUseCase(products);
 
   app.get(
     '/products',
     {
       schema: listProductsRouteSchema,
     },
-    async () => useCases.list(),
+    async () => listProductsUseCase.execute(),
   );
 
   app.get(
@@ -33,7 +44,7 @@ export async function productsRoutes(app: FastifyInstance): Promise<void> {
     },
     async (req) => {
       const { id } = productIdParamSchema.parse(req.params);
-      return useCases.getById(id);
+      return getProductByIdUseCase.execute(id);
     },
   );
 
@@ -45,7 +56,7 @@ export async function productsRoutes(app: FastifyInstance): Promise<void> {
     },
     async (req, reply) => {
       const data = createProductBodySchema.parse(req.body);
-      const created = await useCases.create(data);
+      const created = await createProductUseCase.execute(data);
       return reply.status(201).send(created);
     },
   );
@@ -59,7 +70,7 @@ export async function productsRoutes(app: FastifyInstance): Promise<void> {
     async (req) => {
       const { id } = productIdParamSchema.parse(req.params);
       const data = updateProductBodySchema.parse(req.body);
-      return useCases.update(id, data);
+      return updateProductUseCase.execute(id, data);
     },
   );
 
@@ -71,7 +82,7 @@ export async function productsRoutes(app: FastifyInstance): Promise<void> {
     },
     async (req, reply) => {
       const { id } = productIdParamSchema.parse(req.params);
-      await useCases.delete(id);
+      await deleteProductUseCase.execute(id);
       return reply.status(204).send();
     },
   );

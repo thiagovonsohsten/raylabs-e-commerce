@@ -2,36 +2,20 @@ import { Role } from '@domain/enums.js';
 import { ForbiddenError, NotFoundError } from '@shared/errors/domain-error.js';
 import type { OrderRepository } from '@application/ports/order-repository.js';
 
-/**
- * Casos de uso de leitura de pedidos. Aplica regras de autorização:
- *   - CUSTOMER só vê pedidos próprios.
- *   - ADMIN vê tudo.
- */
-export class QueryOrdersUseCase {
+export interface OrderRequester {
+  sub: string;
+  role: Role;
+}
+
+export class GetOrderByIdUseCase {
   constructor(private readonly orders: OrderRepository) {}
 
-  async getById(orderId: string, requester: { sub: string; role: Role }) {
+  async execute(orderId: string, requester: OrderRequester) {
     const order = await this.orders.findById(orderId);
     if (!order) throw new NotFoundError('Pedido', orderId);
     if (requester.role !== Role.ADMIN && order.customerId !== requester.sub) {
       throw new ForbiddenError();
     }
-    return this.serialize(order);
-  }
-
-  async listForRequester(requester: { sub: string; role: Role }, customerIdFilter?: string) {
-    if (requester.role === Role.ADMIN) {
-      const list = customerIdFilter
-        ? await this.orders.findManyByCustomer(customerIdFilter)
-        : await this.orders.findAll();
-      return list.map((o) => this.serialize(o));
-    }
-    // Customer: força próprio id
-    const list = await this.orders.findManyByCustomer(requester.sub);
-    return list.map((o) => this.serialize(o));
-  }
-
-  private serialize(order: import('@domain/entities/order.js').Order) {
     return {
       id: order.id,
       customerId: order.customerId,
