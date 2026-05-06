@@ -28,6 +28,6 @@
       "@main/*": ["src/main/*"]
     }
   },
-  "include": ["src/**/*", "tests/**/*", "prisma/**/*"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }

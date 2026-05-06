@@ -193,7 +193,7 @@ export default function ProductsPage() {
     <div>
       <h1 className="mb-1 text-2xl font-semibold tracking-tight text-white sm:text-3xl">Produtos</h1>
       <p className="mb-8 max-w-xl text-sm text-zinc-400">
-        Adicione itens ao carrinho e finalize a compra. Preços e estoque vêm da API.
+        Adicione itens ao carrinho e finalize a compra.
       </p>
       {isAdmin && (
         <section className="card-dark mb-8">
